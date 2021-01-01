@@ -34,7 +34,7 @@ Customer-specific messages:
   - sent by server when an employee sent /call-customer and it's customer's turn in queue
 
 Server-terminal-specific messages:
-- /update `{ customers: {id: number, name: string}[], employees: {id:number, name: string}[], waitingTime: number }`
+- /update `{ customers: {id: number, name: string, isProcessed: boolean}[], employees: {id:number, name: string}[], waitingTime: number }`
   - sent by server everytime data is changed
 
 
