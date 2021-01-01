@@ -4,17 +4,36 @@
 
 A sample bank scheduling server written in nodejs and nest framework
 
-## Roles
+## User Roles
 
-- clients terminal
-  - clients can request a new recepit by clicking new receipt button
-    - receipt contains approximate waiting time and number of clients in queue
-  - they would be called when it's their turn in scheuling system
+- server terminal
+  - displays updates about current state of system
+- customer
+  - receives a ticket which includes stats like position in queue and approximate waiting time
 - employee
-  - new employees can join the employees queue at any time
-  - each employee has a terminal
-    - employee can leave at any time
-    - employee can request new client
+  - can process client requests call new customers
+
+## Message Types
+
+All connections to the server is made through socket.io, following messages are supported:
+
+Universal messages:
+- /start `{ name: string, role: 'customer' | 'employee' | 'server' }`
+  - all terminals should introduce themselves before doing anything else
+
+Employee-specific messages:
+- /started `{ id: number }`
+  - server informs employee terminal about it's id immediately after /start
+- /call-customer
+  - called when current customers's job is done and employee is free to accept new custoemrs
+
+Customer-specific messages:
+- /ticket `{ id: number, positionInQueue: number, waitingCustomers: number, activeEmployees: number, approximateWaitingTime: number }`
+  - sent by server immediately after customer sent `/start`
+
+Server-terminal messages:
+- /update `{ customers: {id: number, name: string}[], employees: {id:number, name: string}[], waitingTime: number }`
+  - sent by server everytime data is changed
 
 
 ## Installation
