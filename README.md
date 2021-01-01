@@ -20,10 +20,10 @@ All connections to the server is made through socket.io, following messages are 
 Universal messages:
 - /start `{ name: string, role: 'customer' | 'employee' | 'server' }`
   - all terminals should introduce themselves before doing anything else
+- /started `{ id: number }`
+  - server informs terminal about associated id immediately after /start
 
 Employee-specific messages:
-- /started `{ id: number }`
-  - server informs employee terminal about it's id immediately after /start
 - /call-customer
   - called when current customers's job is done and employee is free to accept new custoemrs
 
