@@ -30,8 +30,10 @@ Employee-specific messages:
 Customer-specific messages:
 - /ticket `{ id: number, positionInQueue: number, waitingCustomers: number, activeEmployees: number, approximateWaitingTime: number }`
   - sent by server immediately after customer sent `/start`
+- /turn `{ employeeId: number, employeeName: string }`
+  - sent by server when an employee sent /call-customer and it's customer's turn in queue
 
-Server-terminal messages:
+Server-terminal-specific messages:
 - /update `{ customers: {id: number, name: string}[], employees: {id:number, name: string}[], waitingTime: number }`
   - sent by server everytime data is changed
 
