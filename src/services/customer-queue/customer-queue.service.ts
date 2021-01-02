@@ -3,30 +3,30 @@ import { Customer } from '~/interfaces';
 
 @Injectable()
 export class CustomerQueueService {
-    customers: Customer[] = []
-    private lastProcessedCustomerIndex: number = -1;
+  customers: Customer[] = [];
+  private currentIndex = 0;
 
-    add(customer: Customer): void {
-        this.customers.push(customer);
-    }
+  add(customer: Customer): void {
+    this.customers.push(customer);
+  }
 
-    hasNext(): boolean {
-       return this.lastProcessedCustomerIndex < this.customers.length - 1
-    }
+  hasNext(): boolean {
+    return this.currentIndex <= this.customers.length - 1;
+  }
 
-    getNext(): Customer {
-        return this.customers[++this.lastProcessedCustomerIndex]
-    }
+  getNext(): Customer {
+    return this.customers[this.currentIndex++];
+  }
 
-    count(): number {
-        return this.customers.length
-    }
+  count(): number {
+    return this.customers.length;
+  }
 
-    countNotProcessed(): number {
-        return this.customers.length - this.lastProcessedCustomerIndex
-    }
+  countNotProcessed(): number {
+    return this.customers.length - this.currentIndex;
+  }
 
-    idOfLast(): number {
-        return this.lastProcessedCustomerIndex;
-    }
+  idOfLast(): number {
+    return this.currentIndex;
+  }
 }

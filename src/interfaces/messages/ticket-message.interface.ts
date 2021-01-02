@@ -3,5 +3,5 @@ export interface TicketMessage {
   positionInQueue: number;
   waitingCustomers: number;
   activeEmployees: number;
-  approximateWaitingTimer: number;
+  approximateWaitingMinutes: number;
 }

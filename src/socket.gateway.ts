@@ -1,13 +1,13 @@
 import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
-import { SOCKET_BIND_PORT } from './environment';
+import { SOCKET_BIND_PORT, MINUTES_PER_CUSTOMER } from '~/environment';
 import { Employee, ServerSocket, StartMessage } from './interfaces';
 import { CustomerQueueService } from './services';
 
 @WebSocketGateway(SOCKET_BIND_PORT, {
-  serveClient: false
+  serveClient: false,
 })
 export class SocketGateway {
-  employees: Employee[] = []
+  employees: Employee[] = [];
 
   serversIdCounter = 0;
   employeesIdCounter = 0;
@@ -28,8 +28,8 @@ export class SocketGateway {
       this.employees.push({
         id,
         name: payload.name,
-        socketId: client.id
-      })
+        socketId: client.id,
+      });
     } else {
       this.joinAsync(client, '/customers');
       id = this.customersIdCounter++;
@@ -38,11 +38,11 @@ export class SocketGateway {
         id,
         name: payload.name,
         socketId: client.id,
-        isProcessed: false
-      })
+        isProcessed: false,
+      });
     }
 
-    client.emit('/started', { id })
+    client.emit('/started', { id });
     this.sendUpdateToServerTerminals(client);
 
     if (payload.role === 'customer') {
@@ -50,25 +50,27 @@ export class SocketGateway {
       client.emit('/ticket', {
         id,
         activeEmployees: this.employees.length,
-        approximateWaitingTimer: 0,
+        approximateWaitingMinutes:
+          (this.customerQueue.countNotProcessed() * MINUTES_PER_CUSTOMER) /
+          this.employees.length,
         waitingCustomers: this.customerQueue.countNotProcessed(),
-        positionInQueue: this.customerQueue.idOfLast()
-      })
+        positionInQueue: this.customerQueue.idOfLast() + 1,
+      });
     }
   }
-  
+
   @SubscribeMessage('/call-customer')
   handleCallCustomerMessage(client: ServerSocket, payload: {}): void {
     if (this.customerQueue.hasNext()) {
-      const customer = this.customerQueue.getNext()
-      customer.isProcessed = true
+      const customer = this.customerQueue.getNext();
+      customer.isProcessed = true;
 
-      const customerSocket: ServerSocket = client.to(customer.socketId)
-      const employee = this.employees.find(x => x.socketId === client.id)
+      const customerSocket: ServerSocket = client.to(customer.socketId);
+      const employee = this.employees.find((x) => x.socketId === client.id);
       customerSocket.emit('/turn', {
         employeeId: employee.id,
-        employeeName: employee.name
-      })
+        employeeName: employee.name,
+      });
 
       this.sendUpdateToServerTerminals(client);
     }
@@ -77,15 +79,18 @@ export class SocketGateway {
   private sendUpdateToServerTerminals(client: ServerSocket): void {
     const serverTerminals: ServerSocket = client.to('/servers');
     serverTerminals.emit('/update', {
-      approximateNewCustomerWaitingTime: 0,
+      minutesPerCustomer: MINUTES_PER_CUSTOMER,
+      approximateWaitingMinutes:
+        (this.customerQueue.countNotProcessed() * MINUTES_PER_CUSTOMER) /
+        this.employees.length,
       customers: this.customerQueue.customers,
-      employees: this.employees
-    })
+      employees: this.employees,
+    });
   }
-  
+
   /**
    * Async join client to room
-   * 
+   *
    * @param client Socket
    * @param room Room name to join
    */
@@ -93,11 +98,11 @@ export class SocketGateway {
     return new Promise((resolve, reject) => {
       client.join(room, (err?: any) => {
         if (err) {
-          reject(err)
+          reject(err);
         } else {
-          resolve()
+          resolve();
         }
-      })
-    })
+      });
+    });
   }
 }

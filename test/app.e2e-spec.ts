@@ -2,8 +2,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { createSocketClientAsync, getTicketMessageAsync, startSocket } from './helpers';
-import { ClientSocket, StartedMessage, TicketMessage, UpdateMessage } from '~/interfaces';
+import {
+  createSocketClientAsync,
+  getTicketMessageAsync,
+  startSocket,
+} from './helpers';
+import {
+  ClientSocket,
+  StartedMessage,
+  TicketMessage,
+  UpdateMessage,
+} from '~/interfaces';
 import { getUpdateMessageAsync } from './helpers/socket/get-update-message';
 import { getTurnMessageAsync } from './helpers/socket/get-turn-message';
 
@@ -18,10 +27,10 @@ describe('AppController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
   });
-  
+
   afterEach(() => {
-    app.close()
-  })
+    app.close();
+  });
 
   xit('/ (GET)', () => {
     return request(app.getHttpServer())
@@ -39,33 +48,32 @@ describe('AppController (e2e)', () => {
 
     afterEach(() => {
       serverTerminal?.close();
-    })
+    });
 
     it('should be connected', () => {
       expect(serverTerminal).toBeTruthy();
 
       expect(serverTerminal.connected).toEqual(true);
-    })
+    });
 
     describe('=> Server terminal sent /start', () => {
-    let serverTerminalStartedMessage: StartedMessage;
-    let lastServerUpdate: UpdateMessage;
+      let serverTerminalStartedMessage: StartedMessage;
+      let lastServerUpdate: UpdateMessage;
 
       beforeEach(async () => {
         serverTerminal.on('/update', (message) => {
-          lastServerUpdate = message
+          lastServerUpdate = message;
         });
 
         serverTerminalStartedMessage = await startSocket(serverTerminal, {
           name: 'test-server-terminal',
-          role: 'server'
+          role: 'server',
         });
-      })
+      });
 
       it('should have id==0', () => {
         expect(serverTerminalStartedMessage.id).toEqual(0);
-      })
-
+      });
 
       describe('Employee 0', () => {
         let employee0: ClientSocket;
@@ -76,12 +84,12 @@ describe('AppController (e2e)', () => {
 
         afterEach(() => {
           employee0?.close();
-        })
+        });
 
         it('should be connected', () => {
           expect(employee0).toBeTruthy();
           expect(employee0.connected).toEqual(true);
-        })
+        });
 
         describe('=> Employee 0 sent /start', () => {
           let employee0StartedMessage: StartedMessage;
@@ -89,21 +97,21 @@ describe('AppController (e2e)', () => {
           beforeEach(async () => {
             employee0StartedMessage = await startSocket(employee0, {
               name: 'test-employee-0',
-              role: 'employee'
-            })
-          })
+              role: 'employee',
+            });
+          });
 
           it('should have id==0', () => {
             expect(employee0StartedMessage.id).toEqual(0);
-          })
+          });
 
           it('should emit /update on server terminal', async () => {
-            const message = await getUpdateMessageAsync(serverTerminal)
-            expect(message).toBeTruthy()
-            expect(message.employees).toBeTruthy()
-            expect(message.employees.length).toEqual(1)
-            expect(message.employees[0].name).toEqual('test-employee-0')
-          })
+            const message = await getUpdateMessageAsync(serverTerminal);
+            expect(message).toBeTruthy();
+            expect(message.employees).toBeTruthy();
+            expect(message.employees.length).toEqual(1);
+            expect(message.employees[0].name).toEqual('test-employee-0');
+          });
 
           describe('Employee 1', () => {
             let employee1: ClientSocket;
@@ -114,34 +122,34 @@ describe('AppController (e2e)', () => {
 
             afterEach(() => {
               employee1?.close();
-            })
+            });
 
             it('should be connected', () => {
               expect(employee1).toBeTruthy();
               expect(employee1.connected).toEqual(true);
-            })
+            });
 
             describe('=> Employee 1 sent /start', () => {
-            let employee1StartedMessage: StartedMessage;
+              let employee1StartedMessage: StartedMessage;
 
               beforeEach(async () => {
                 employee1StartedMessage = await startSocket(employee1, {
                   name: 'test-employee-1',
-                  role: 'employee'
-                })
-              })
+                  role: 'employee',
+                });
+              });
 
               it('should have id==1', () => {
                 expect(employee1StartedMessage.id).toEqual(1);
-              })
+              });
 
               it('should emit /update on server terminal', async () => {
-                const message = await getUpdateMessageAsync(serverTerminal)
-                expect(message).toBeTruthy()
-                expect(message.employees).toBeTruthy()
-                expect(message.employees.length).toEqual(2)
-                expect(message.employees[1].name).toEqual('test-employee-1')
-              })
+                const message = await getUpdateMessageAsync(serverTerminal);
+                expect(message).toBeTruthy();
+                expect(message.employees).toBeTruthy();
+                expect(message.employees.length).toEqual(2);
+                expect(message.employees[1].name).toEqual('test-employee-1');
+              });
 
               describe('Customer 0', () => {
                 let customer0: ClientSocket;
@@ -152,60 +160,82 @@ describe('AppController (e2e)', () => {
 
                 afterEach(() => {
                   customer0?.close();
-                })
+                });
 
                 it('should be connected', () => {
                   expect(customer0).toBeTruthy();
                   expect(customer0.connected).toEqual(true);
-                })
+                });
 
                 describe('=> Customer 0 sent /start', () => {
-                let customer0StartedMessage: StartedMessage;
-                let customer0TicketPromise: Promise<TicketMessage>
+                  let customer0StartedMessage: StartedMessage;
+                  let customer0Ticket: TicketMessage;
 
                   beforeEach(async () => {
-                    customer0TicketPromise = getTicketMessageAsync(customer0)
-                    customer0StartedMessage = await startSocket(customer0, {
-                      name: 'test-customer-0',
-                      role: 'customer'
-                    })
-                  })
+                    [
+                      customer0Ticket,
+                      customer0StartedMessage,
+                    ] = await Promise.all([
+                      getTicketMessageAsync(customer0),
+                      startSocket(customer0, {
+                        name: 'test-customer-0',
+                        role: 'customer',
+                      }),
+                    ]);
+                  });
 
-                  it('should have id==0', () => {
+                  it('should have id==0 in started message', () => {
                     expect(customer0StartedMessage.id).toEqual(0);
-                  })
+                  });
+
+                  it('should have id==0 in ticket', async () => {
+                    expect(customer0Ticket.id).toEqual(0);
+                  });
+
+                  it('should have activeEmployees==2 in ticket', async () => {
+                    expect(customer0Ticket.activeEmployees).toEqual(2);
+                  });
+
+                  it('should have positionInQueue==1 in ticket', async () => {
+                    expect(customer0Ticket.positionInQueue).toEqual(1);
+                  });
+
+                  it('should have positionInQueue==1 in ticket', async () => {
+                    expect(customer0Ticket.approximateWaitingMinutes).toEqual(
+                      1.5,
+                    );
+                  });
 
                   it('should emit /update on server terminal', async () => {
-                    const message = await getUpdateMessageAsync(serverTerminal)
-                    expect(message).toBeTruthy()
-                    expect(message.customers).toBeTruthy()
-                    expect(message.customers.length).toEqual(1)
-                    expect(message.customers[0].name).toEqual('test-customer-0')
-                  })
+                    const message = await getUpdateMessageAsync(serverTerminal);
+                    expect(message).toBeTruthy();
+                    expect(message.customers).toBeTruthy();
+                    expect(message.customers.length).toEqual(1);
+                    expect(message.customers[0].name).toEqual(
+                      'test-customer-0',
+                    );
+                  });
 
                   it('should emit /turn if employee1 sends /call-customer', async () => {
-                    const turnMessagePromise = getTurnMessageAsync(customer0)
-                    employee1.emit('/call-customer')
-                    
+                    const turnMessagePromise = getTurnMessageAsync(customer0);
+                    employee1.emit('/call-customer');
+
                     const turnMessage = await turnMessagePromise;
-                    
-                    expect(turnMessage).toBeTruthy()
+
+                    expect(turnMessage).toBeTruthy();
                   });
 
                   it('should receive /ticket', async () => {
-                    const message = await customer0TicketPromise
+                    const message = await customer0Ticket;
 
-                    expect(message).toBeTruthy()
-                  })
-                })
-              })
-            })
-          })
-
-        })
-      })
-
-    })
-  })
-
+                    expect(message).toBeTruthy();
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
 });
