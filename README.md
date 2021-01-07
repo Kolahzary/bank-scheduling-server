@@ -2,7 +2,9 @@
 
 ## Description
 
-A sample bank scheduling server written in nodejs and nest framework
+A sample bank scheduling server written in 1-2 nights with nodejs and nest framework
+
+Check bank-scheduling-front app for front-end part written in nuxt.js
 
 ## User Roles
 
